@@ -12,7 +12,7 @@ A full-stack personal finance management application that helps users track expe
 |-------|---------------------------|------------|
 | Admin | admin@budgettracker.com   | Admin1234! |
 
-> Register a new account to access the user dashboard, or use the admin credentials above to access the admin panel.
+Register a new account to access the user dashboard, or use the admin credentials above to access the admin panel.
 
 ---
 
