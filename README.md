@@ -51,7 +51,6 @@ BudgetTracker/
     |   |── components/    # Reusable UI components
     |   |── pages/         # Page-level components
     |   |── axiosConfig.jsx # Axios base URL config
-    |── public/
 ```
 
 ---
