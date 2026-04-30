@@ -1,5 +1,5 @@
 const Expense = require('../models/Expense');
-const Budget = require('../models/Budget');
+const { expenseSubject } = require('../patterns/observer/BudgetObserver'); // Pattern 1: Observer
 
 const getExpenses = async (req, res) => {
   try {
@@ -17,14 +17,10 @@ const createExpense = async (req, res) => {
       userId: req.user.id, amount, category, date, description
     });
 
-    const budget = await Budget.findOne({
-      userId: req.user.id,
-      category: category
+    // Observer: notify BudgetObserver to update spentAmount automatically
+    await expenseSubject.notify('expense:created', {
+      userId: req.user.id, category, amount
     });
-    if (budget) {
-      budget.spentAmount = budget.spentAmount + Number(amount);
-      await budget.save();
-    }
 
     res.status(201).json(expense);
   } catch (error) {
@@ -47,26 +43,16 @@ const updateExpense = async (req, res) => {
     expense.category = category || expense.category;
     expense.date = date || expense.date;
     expense.description = description || expense.description;
-
     const updated = await expense.save();
 
-    const oldBudget = await Budget.findOne({
+    // Observer: notify BudgetObserver to adjust old and new budget
+    await expenseSubject.notify('expense:updated', {
       userId: req.user.id,
-      category: oldCategory
+      category: expense.category,
+      amount: expense.amount,
+      oldCategory,
+      oldAmount
     });
-    if (oldBudget) {
-      oldBudget.spentAmount = Math.max(0, oldBudget.spentAmount - Number(oldAmount));
-      await oldBudget.save();
-    }
-
-    const newBudget = await Budget.findOne({
-      userId: req.user.id,
-      category: expense.category
-    });
-    if (newBudget) {
-      newBudget.spentAmount = newBudget.spentAmount + Number(expense.amount);
-      await newBudget.save();
-    }
 
     res.json(updated);
   } catch (error) {
@@ -81,14 +67,12 @@ const deleteExpense = async (req, res) => {
     if (expense.userId.toString() !== req.user.id)
       return res.status(401).json({ message: 'Not authorized' });
 
-    const budget = await Budget.findOne({
+    // Observer: notify BudgetObserver to roll back spentAmount before deleting
+    await expenseSubject.notify('expense:deleted', {
       userId: req.user.id,
-      category: expense.category
+      category: expense.category,
+      amount: expense.amount
     });
-    if (budget) {
-      budget.spentAmount = Math.max(0, budget.spentAmount - Number(expense.amount));
-      await budget.save();
-    }
 
     await expense.deleteOne();
     res.json({ message: 'Expense deleted' });

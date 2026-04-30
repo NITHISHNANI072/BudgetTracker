@@ -1,49 +1,56 @@
-// OOP Principle: Abstraction
-// BudgetEntry is an abstract base class that defines the common structure and
-// interface for all financial entries. Subclasses must implement summarize().
-// Controllers interact with this interface without knowing the specific subtype.
+// ============================================================
+// OOP Principles — Base Class
+// ============================================================
+// Abstraction: BudgetEntry defines the common interface for all
+//   financial entries. Callers use summarize() and toJSON() without
+//   knowing whether the entry is income or expense.
+//
+// Encapsulation: Fields are private (_amount, _userId etc.) and
+//   only accessible through controlled getters. Direct field mutation
+//   is prevented — setStatus() validates before changing state.
+// ============================================================
 
 class BudgetEntry {
   constructor(data) {
     if (new.target === BudgetEntry) {
-      throw new Error('BudgetEntry is abstract and cannot be instantiated directly');
+      throw new Error('BudgetEntry is abstract — use IncomeEntry or ExpenseEntry');
     }
-    // OOP Principle: Encapsulation — private fields accessed only via methods
-    this._id = data.id || null;
-    this._userId = data.userId;
-    this._amount = data.amount;
-    this._date = data.date;
+    this._id          = data.id || null;
+    this._userId      = data.userId;
+    this._amount      = data.amount;
+    this._date        = data.date;
     this._description = data.description || '';
-    this._status = 'active';
+    this._status      = 'active';
   }
 
-  // Public getters — controlled access to private fields (Encapsulation)
-  get amount() { return this._amount; }
-  get userId() { return this._userId; }
-  get date() { return this._date; }
+  // Encapsulation: read-only public accessors
+  get amount()      { return this._amount; }
+  get userId()      { return this._userId; }
+  get date()        { return this._date; }
   get description() { return this._description; }
-  get status() { return this._status; }
+  get status()      { return this._status; }
 
+  // Encapsulation: validated setter — status cannot be set to arbitrary values
   setStatus(status) {
-    const valid = ['active', 'archived'];
-    if (!valid.includes(status)) throw new Error(`Invalid status: ${status}`);
+    const allowed = ['active', 'archived'];
+    if (!allowed.includes(status)) throw new Error(`Invalid status: ${status}`);
     this._status = status;
   }
 
-  // Abstract method — subclasses must override (Abstraction)
+  // Abstraction: subclasses must provide their own summarize()
   summarize() {
     throw new Error('summarize() must be implemented by subclass');
   }
 
-  // Shared method available to all subclasses (Inheritance)
+  // Shared method (Inheritance) — calls subclass summarize() via Polymorphism
   toJSON() {
     return {
-      userId: this._userId,
-      amount: this._amount,
-      date: this._date,
+      userId:      this._userId,
+      amount:      this._amount,
+      date:        this._date,
       description: this._description,
-      status: this._status,
-      summary: this.summarize(),  // Polymorphism — calls subclass version
+      status:      this._status,
+      summary:     this.summarize(),
     };
   }
 }
